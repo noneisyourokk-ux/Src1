@@ -21,6 +21,7 @@ API_ID = os.getenv("API_ID", "22470912")
 API_HASH = os.getenv("API_HASH", "511be78079ed5d4bd4c967bc7b5ee023")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 MONGO_DB = os.getenv("MONGO_DB", "mongodb+srv://Demo23:Demo23@cluster0.fjar36c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+MONGO_URI = MONGO_DB
 OWNER_ID = list(map(int, os.getenv("OWNER_ID", "7678862761").split())) # list seperated via space
 DB_NAME = os.getenv("DB_NAME", "Demo23")
 STRING = os.getenv("STRING", None) # optional
