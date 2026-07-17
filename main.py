@@ -7,7 +7,25 @@ from shared_client import start_client
 import importlib
 import os
 import sys
+from flask import Flask
+from threading import Thread
 
+# ======================================================
+# 🚀 Render Flask Web Server (To keep bot alive)
+# ======================================================
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is alive and running perfectly!"
+
+def run_flask():
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+
+# ======================================================
+# 🤖 Main Bot Logic
+# ======================================================
 async def load_and_run_plugins():
     await start_client()
     plugin_dir = "plugins"
@@ -25,6 +43,12 @@ async def main():
         await asyncio.sleep(1)  
 
 if __name__ == "__main__":
+    # Flask ko alag thread me start kar rahe hain taaki Render port binding verify kar sake
+    t = Thread(target=run_flask)
+    t.daemon = True
+    t.start()
+    print("🌐 Web server started on port 5000...")
+
     loop = asyncio.get_event_loop()
     print("Starting clients ...")
     try:
@@ -35,6 +59,9 @@ if __name__ == "__main__":
         sys.exit(1)
     finally:
         try:
+            loop.close()
+        except Exception:
+            pass        try:
             loop.close()
         except Exception:
             pass
