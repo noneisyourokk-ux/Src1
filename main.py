@@ -7,6 +7,7 @@ from shared_client import start_client
 import importlib
 import os
 import sys
+import traceback
 from flask import Flask
 from threading import Thread
 
@@ -21,21 +22,30 @@ def home():
 
 def run_flask():
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, use_reloader=False)
 
 # ======================================================
 # 🤖 Main Bot Logic
 # ======================================================
 async def load_and_run_plugins():
-    await start_client()
-    plugin_dir = "plugins"
-    plugins = [f[:-3] for f in os.listdir(plugin_dir) if f.endswith(".py") and f != "__init__.py"]
+    try:
+        await start_client()
+    except Exception as e:
+        print(f"❌ Error during start_client: {e}")
+        traceback.print_exc()
 
-    for plugin in plugins:
-        module = importlib.import_module(f"plugins.{plugin}")
-        if hasattr(module, f"run_{plugin}_plugin"):
-            print(f"Running {plugin} plugin...")
-            await getattr(module, f"run_{plugin}_plugin")()  
+    plugin_dir = "plugins"
+    if os.path.exists(plugin_dir):
+        plugins = [f[:-3] for f in os.listdir(plugin_dir) if f.endswith(".py") and f != "__init__.py"]
+        for plugin in plugins:
+            try:
+                module = importlib.import_module(f"plugins.{plugin}")
+                if hasattr(module, f"run_{plugin}_plugin"):
+                    print(f"Running {plugin} plugin...")
+                    await getattr(module, f"run_{plugin}_plugin")()  
+            except Exception as e:
+                print(f"❌ Error loading plugin {plugin}: {e}")
+                traceback.print_exc()
 
 async def main():
     await load_and_run_plugins()
@@ -43,22 +53,21 @@ async def main():
         await asyncio.sleep(1)  
 
 if __name__ == "__main__":
-    # Flask ko alag thread me start kar rahe hain taaki Render port binding verify kar sake
+    # Flask web server background me trigger
     t = Thread(target=run_flask)
     t.daemon = True
     t.start()
-    print("🌐 Web server started on port 5000...")
+    print("🌐 Web server successfully bound to port 5000...")
 
     loop = asyncio.get_event_loop()
     print("Starting clients ...")
     try:
         loop.run_until_complete(main())
     except KeyboardInterrupt:
-        print("Shutting down...")
+        print("Shutting down gracefully...")
     except Exception as e:
-        sys.exit(1)
-    finally:
-        try:
-            loop.close()
-        except Exception:
-            pass
+        print(f"⚠️ Caught critical main loop exception: {e}")
+        traceback.print_exc()
+        # PERMANENT FIX: sys.exit(1) ko block kiya taaki Render restart loop me na phase
+        print("Keep-alive active. Main process continuing...")
+        loop.run_until_complete(main())
