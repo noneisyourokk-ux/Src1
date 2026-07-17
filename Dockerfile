@@ -1,14 +1,30 @@
-FROM python:3.10.4-slim-buster
-RUN apt update && apt upgrade -y
-RUN apt-get install git curl python3-pip ffmpeg -y
-RUN apt-get -y install git
-RUN apt-get install -y wget python3-pip curl bash neofetch ffmpeg software-properties-common
-WORKDIR /app
-COPY requirements.txt .
+# 1. Purani buster image ko badal kar latest stable bookworm use kiya
+FROM python:3.10-slim-bookworm
 
-RUN pip3 install wheel
-RUN pip3 install --no-cache-dir -U -r requirements.txt
+# 2. Saare duplicate apt installs ko ek clean command me merge kiya aur cache saaf ki
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    wget \
+    bash \
+    ffmpeg \
+    neofetch \
+    software-properties-common \
+    gcc \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# 3. Requirements install karne ka optimized setup
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir wheel && \
+    pip3 install --no-cache-dir -U -r requirements.txt
+
 COPY . .
+
 EXPOSE 5000
 
-CMD flask run -h 0.0.0.0 -p 5000 & python3 main.py
+# 4. Process management fix: Flask aur Pyrogram dono ko bina crash ke background me running rakhne ke liye sh command use ki hai
+CMD sh -c "flask run -h 0.0.0.0 -p 5000 & python3 main.py"
