@@ -20,7 +20,7 @@ PUBLIC_LINK_PATTERN = re.compile(r'(https?://)?(t\.me|telegram\.me)/([^/]+)(/(\d
 PRIVATE_LINK_PATTERN = re.compile(r'(https?://)?(t\.me|telegram\.me)/c/(\d+)(/(\d+))?')
 VIDEO_EXTENSIONS = {"mp4", "mkv", "avi", "mov", "wmv", "flv", "webm", "mpeg", "mpg", "3gp"}
 
-mongo_client = AsyncIOMotorClient(MONGO_URI)
+mongo_client = AsyncIOMotorClient(MONGO_DB)
 db = mongo_client[DB_NAME]
 users_collection = db["users"]
 premium_users_collection = db["premium_users"]
