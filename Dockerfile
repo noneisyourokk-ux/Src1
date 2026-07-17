@@ -27,4 +27,4 @@ COPY . .
 EXPOSE 5000
 
 # 4. Process management fix: Flask aur Pyrogram dono ko bina crash ke background me running rakhne ke liye sh command use ki hai
-CMD sh -c "flask run -h 0.0.0.0 -p 5000 & python3 main.py"
+CMD ["python3", "main.py"]
